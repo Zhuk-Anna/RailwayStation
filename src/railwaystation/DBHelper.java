@@ -38,14 +38,12 @@ public class DBHelper {
     public String selectFunction(String command, int columnsLength) {
         try {
             ResultSet resultSet = this.statement.executeQuery(command);
-
-        StringBuilder result = new StringBuilder();
-
+            StringBuilder result = new StringBuilder();
             while (resultSet.next()) {
                 for (int i = 1; i <= columnsLength; i++) {
-                    result.append(resultSet.getString(i)).append("_");
+                    result.append(resultSet.getString(i)).append(";");
                 }
-                result.append(";");
+                result.append("\n");
             }
             return result.toString();
         } catch (SQLException e) {
@@ -61,5 +59,17 @@ public class DBHelper {
             e.printStackTrace();
         }
     }
+
+    public String insertFunctionWithResult(String command) {
+        try {
+            ResultSet resultSet = this.statement.executeQuery(command);
+            resultSet.next();
+            return resultSet.getString(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
 }

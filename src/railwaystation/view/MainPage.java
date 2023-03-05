@@ -59,19 +59,23 @@ public class MainPage extends JPanel {
         refreshTrainListTable();
     }
 
+    // Нажата кнопка "Удалить поезд"
     private void onDeleteTrainButtonClick(ActionEvent actionEvent) {
+        // Активная строка в таблице
         int row = trainListTable.getSelectedRow();
         if (row < 0) {
             return;
         }
 
+        // в 0 столбце id поезда
         String id = trainListTable.getModel().getValueAt(row, 0).toString();
         if (id == null) {
             return;
         }
 
-        // TODO: check Tickets
+        // TODO: Проверить вдруг уже проданы билеты на этот поезд, тогда нельзя удалять
 
+        // Удалить поезд из БД
         DBHelper.getInstance().executeFunction("Exec deleteTrain " + id);
 
         refreshTrainListTable();

@@ -15,8 +15,8 @@ public class DBComboboxModel extends DefaultComboBoxModel<DBComboboxModel.ComboB
         String result = DBHelper.getInstance().selectFunction("Exec " + storedProcedureName, columnNames.length);
         List<ComboBoxItem> data = new ArrayList<>();
         if (result != null && !result.isEmpty()) {
-            data = Arrays.stream(result.split(";")).map(i -> {
-                String[] str = i.split("_");
+            data = Arrays.stream(result.split("\n")).map(i -> {
+                String[] str = i.split(";");
                 return new ComboBoxItem(str[0], str[1]);
             }).collect(Collectors.toList());
         }

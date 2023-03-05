@@ -1,5 +1,7 @@
 package railwaystation.view;
 
+import railwaystation.DBHelper;
+
 import javax.swing.*;
 import javax.swing.table.TableModel;
 import java.awt.event.*;
@@ -39,6 +41,9 @@ public class Train extends JDialog {
         buttonOK.addActionListener(e -> onOK());
         buttonCancel.addActionListener(e -> onCancel());
 
+        addWagonButton.addActionListener(e -> onAddWagon());
+        deleteWagonButton.addActionListener(e -> onDeleteWagon());
+
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -57,10 +62,12 @@ public class Train extends JDialog {
         refreshTrainInfo();
     }
 
+    // Получим из БД информацию о поезде и обновим компоненты на форме
     private void refreshTrainInfo() {
         refreshTrainTypeList();
         refreshStationList();
 
+        // Если создание нового поезда - установим в ComboBox значения по умолчанию
         if (trainId == null) {
             trainTypeComboBox.setSelectedIndex(0);
             arrivalStationComboBox.setSelectedIndex(0);
@@ -84,6 +91,7 @@ public class Train extends JDialog {
         refreshWagonListTable();
     }
 
+    // Установим у ComboBox текущий элемент
     private void setComboboxIndex(JComboBox combobox, String id) {
         for (int i = 0; i < combobox.getItemCount(); i++) {
             DBComboboxModel.ComboBoxItem item = (DBComboboxModel.ComboBoxItem) combobox.getItemAt(i);
@@ -94,11 +102,13 @@ public class Train extends JDialog {
         }
     }
 
+    // Получим из БД список типов поездов в ComboBox
     private void refreshTrainTypeList() {
         ComboBoxModel trainTypeModel = new DBComboboxModel("getAllTrainTypes");
         trainTypeComboBox.setModel(trainTypeModel);
     }
 
+    // Получим из БД список станций в ComboBox
     private void refreshStationList() {
         ComboBoxModel arrivalStationModel = new DBComboboxModel("getAllStations");
         ComboBoxModel departureStationModel = new DBComboboxModel("getAllStations");
@@ -106,23 +116,102 @@ public class Train extends JDialog {
         departureStationComboBox.setModel(departureStationModel);
     }
 
+    // Обновим список вагонов (таблицу)
     private void refreshWagonListTable() {
         String[] columnNames = {"ID", "Номер вагона", "Тип вагона", "Кол-во мест", "Цена"};
         TableModel model = new DBTableModel("getAllWagonsInfo " + trainId, columnNames);
         wagonListTable.setModel(model);
     }
 
+    // Нажата кнопка "Отмена"
+    private void onCancel() {
+        dispose();
+    }
+
+    // Нажата кнопка "OK"
     private void onOK() {
         if (trainId != null) {
-            // TODO edit
+            editTrain(); // Редактируем поезд
         } else {
-            // TODO add
+            addTrain(); // Создаем новый поезд
         }
         dispose();
     }
 
-    private void onCancel() {
-        dispose();
+    // Добавление нового поезда в БД
+    private void addTrain() {
+        // Сформируем SQL строку
+        StringBuilder command = new StringBuilder("EXECUTE addTrain ");
+        command.append("\"" + trainNameTextField.getText() + "\", "); // Номер поезда
+        DBComboboxModel.ComboBoxItem trainTypeComboBoxItem = (DBComboboxModel.ComboBoxItem) trainTypeComboBox.getModel().getSelectedItem();
+        command.append(trainTypeComboBoxItem.getId() + ", "); // Тип поезда
+        DBComboboxModel.ComboBoxItem departureStationComboBoxItem = (DBComboboxModel.ComboBoxItem) departureStationComboBox.getModel().getSelectedItem();
+        command.append(departureStationComboBoxItem.getId() + ", "); // Станция отправления
+        DBComboboxModel.ComboBoxItem arrivalStationComboBoxItem = (DBComboboxModel.ComboBoxItem) arrivalStationComboBox.getModel().getSelectedItem();
+        command.append(arrivalStationComboBoxItem.getId() + ", "); // Станция прибытия
+        command.append("\"" + departureTimeTextField.getText() + "\" "); // Время отправления TODO: String -> Date
+
+        // Выполним SQL и получим результат (ID новой записи в БД)
+        String id = DBHelper.getInstance().insertFunctionWithResult(command.toString());
+        if (id != null && !id.isEmpty()) {
+            trainId = id; // Теперь у нас есть поезд в БД
+        }
+    }
+
+    // Изменение существующего поезда в БД
+    private void editTrain() {
+        StringBuilder command = new StringBuilder("EXECUTE editTrain ");
+        command.append(trainId + ", "); // ID поезда
+        command.append("\"" + trainNameTextField.getText() + "\", "); // Номер поезда
+        DBComboboxModel.ComboBoxItem trainTypeComboBoxItem = (DBComboboxModel.ComboBoxItem) trainTypeComboBox.getModel().getSelectedItem();
+        command.append(trainTypeComboBoxItem.getId() + ", "); // Тип поезда
+        DBComboboxModel.ComboBoxItem departureStationComboBoxItem = (DBComboboxModel.ComboBoxItem) departureStationComboBox.getModel().getSelectedItem();
+        command.append(departureStationComboBoxItem.getId() + ", "); // Станция отправления
+        DBComboboxModel.ComboBoxItem arrivalStationComboBoxItem = (DBComboboxModel.ComboBoxItem) arrivalStationComboBox.getModel().getSelectedItem();
+        command.append(arrivalStationComboBoxItem.getId() + ", "); // Станция прибытия
+        command.append("\"" + departureTimeTextField.getText() + "\" "); // Время отправления TODO: String -> Date
+
+        DBHelper.getInstance().executeFunction(command.toString());
+    }
+
+    // Нажата кнопка "Добавить вагон"
+    private void onAddWagon() {
+        // Если мы в режиме создания нового поезда, то перед добавлением вагонов добавим в БД сам поезд
+        // TODO: предупредить пользователя, что перед добавлением вагона поезд будет сохранен (создан) в БД
+        if (trainId == null) {
+            addTrain();
+        }
+
+        // Диалог создания вагона
+        Wagon dialog = new Wagon(trainId);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+
+        // Обновим список (возможно добавился новый вагон)
+        refreshWagonListTable();
+    }
+
+    // Нажата кнопка "Удалить вагон"
+    private void onDeleteWagon() {
+        // Активная строка в таблице
+        int row = wagonListTable.getSelectedRow();
+        if (row < 0) {
+            return;
+        }
+
+        // в 0 столбце id вагона
+        String id = wagonListTable.getModel().getValueAt(row, 0).toString();
+        if (id == null) {
+            return;
+        }
+
+        // TODO: Проверить вдруг уже проданы билеты в этот вагон, тогда нельзя удалять
+
+        // Удалить вагон из БД
+        DBHelper.getInstance().executeFunction("Exec deleteWagon " + id);
+
+        refreshWagonListTable();
     }
 
 }

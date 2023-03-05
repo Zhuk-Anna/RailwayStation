@@ -9,9 +9,8 @@ public class DBTableModel extends DefaultTableModel {
 
     public DBTableModel(String storedProcedureName, Object[] columnNames) {
         String result = DBHelper.getInstance().selectFunction("Exec " + storedProcedureName, columnNames.length);
-        System.out.println(result);
         if (result != null && !result.isEmpty()) {
-            Object[][]  data = Arrays.stream(result.split(";")).map(i -> i.split("_")).toArray(Object[][]::new);
+            Object[][]  data = Arrays.stream(result.split("\n")).map(i -> i.split(";")).toArray(Object[][]::new);
             super.setDataVector(data, columnNames);
         } else {
             super.setColumnIdentifiers(columnNames);
