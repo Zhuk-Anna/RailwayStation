@@ -12,7 +12,7 @@ public class DBComboboxModel extends DefaultComboBoxModel<DBComboboxModel.ComboB
 
     public DBComboboxModel(String storedProcedureName) {
         String[] columnNames = {"ID", "Название"};
-        String result = DBHelper.getInstance().selectFunction("Exec " + storedProcedureName, columnNames.length);
+        String result = DBHelper.getInstance().selectFunction("EXECUTE " + storedProcedureName, columnNames.length);
         List<ComboBoxItem> data = new ArrayList<>();
         if (result != null && !result.isEmpty()) {
             data = Arrays.stream(result.split("\n")).map(i -> {

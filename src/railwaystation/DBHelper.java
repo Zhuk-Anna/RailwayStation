@@ -1,5 +1,6 @@
 package railwaystation;
 
+import javax.swing.*;
 import java.sql.*;
 
 public class DBHelper {
@@ -31,6 +32,10 @@ public class DBHelper {
                 statement.close();
             } catch (SQLException e) {
                 e.printStackTrace();
+                JOptionPane.showMessageDialog(null,
+                        e.getLocalizedMessage(),
+                        "Ошибка",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -57,6 +62,10 @@ public class DBHelper {
             statement.execute(command);
         } catch (SQLException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(null,
+                    e.getLocalizedMessage(),
+                    "Ошибка",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -67,9 +76,12 @@ public class DBHelper {
             return resultSet.getString(1);
         } catch (SQLException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(null,
+                    e.getLocalizedMessage(),
+                    "Ошибка",
+                    JOptionPane.ERROR_MESSAGE);
         }
         return null;
     }
-
 
 }

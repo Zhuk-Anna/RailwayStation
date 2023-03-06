@@ -5,27 +5,30 @@ import railwaystation.DBHelper;
 import javax.swing.*;
 import javax.swing.table.TableModel;
 import java.awt.event.*;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
-public class Train extends JDialog {
+public class TrainInfo extends JDialog {
     private JPanel contentPane;
+
+    private JTextField trainNameTextField;
+    private JComboBox trainTypeComboBox;
+    private JSpinner departureTimeSpinner;
+    private JComboBox departureStationComboBox;
+    private JComboBox arrivalStationComboBox;
+
     private JButton buttonOK;
     private JButton buttonCancel;
-    private JTextField trainNameTextField;
-    private JComboBox arrivalStationComboBox;
-    private JComboBox departureStationComboBox;
-    private JComboBox trainTypeComboBox;
-    private JTable wagonListTable;
-    private JButton addWagonButton;
-    private JButton deleteWagonButton;
-    private JTextField departureTimeTextField;
+//    private JTextField departureTimeTextField;
 
     private String trainId;
 
-    public Train() {
+    public TrainInfo() {
         this(null);
     }
 
-    public Train(String trainId) {
+    public TrainInfo(String trainId) {
         this.trainId = trainId;
 
         if (trainId != null) {
@@ -40,9 +43,6 @@ public class Train extends JDialog {
 
         buttonOK.addActionListener(e -> onOK());
         buttonCancel.addActionListener(e -> onCancel());
-
-        addWagonButton.addActionListener(e -> onAddWagon());
-        deleteWagonButton.addActionListener(e -> onDeleteWagon());
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -59,7 +59,24 @@ public class Train extends JDialog {
             }
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
+        initDepartureTimeSpinner();
         refreshTrainInfo();
+    }
+
+    private void initDepartureTimeSpinner() {
+        departureTimeSpinner.setModel(new SpinnerDateModel());
+        JSpinner.DateEditor dateTimeEditor = new JSpinner.DateEditor(departureTimeSpinner, "dd.MM.yyyy HH:mm");
+        departureTimeSpinner.setEditor(dateTimeEditor);
+        departureTimeSpinner.setValue(new Date());
+    }
+
+    private String getDepartureTime() {
+        Date date = (Date) departureTimeSpinner.getValue();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.SECOND, 0);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        return formatter.format(calendar.getTime());
     }
 
     // Получим из БД информацию о поезде и обновим компоненты на форме
@@ -82,13 +99,11 @@ public class Train extends JDialog {
         }
 
         trainNameTextField.setText(model.getValueAt(0, 1).toString());
-        departureTimeTextField.setText(model.getValueAt(0, 3).toString());
+//        departureTimeTextField.setText(model.getValueAt(0, 3).toString()); // TODO: String -> Date
 
         setComboboxIndex(trainTypeComboBox, model.getValueAt(0, 2).toString());
         setComboboxIndex(departureStationComboBox, model.getValueAt(0, 4).toString());
         setComboboxIndex(arrivalStationComboBox, model.getValueAt(0, 5).toString());
-
-        refreshWagonListTable();
     }
 
     // Установим у ComboBox текущий элемент
@@ -114,13 +129,6 @@ public class Train extends JDialog {
         ComboBoxModel departureStationModel = new DBComboboxModel("getAllStations");
         arrivalStationComboBox.setModel(arrivalStationModel);
         departureStationComboBox.setModel(departureStationModel);
-    }
-
-    // Обновим список вагонов (таблицу)
-    private void refreshWagonListTable() {
-        String[] columnNames = {"ID", "Номер вагона", "Тип вагона", "Кол-во мест", "Цена"};
-        TableModel model = new DBTableModel("getAllWagonsInfo " + trainId, columnNames);
-        wagonListTable.setModel(model);
     }
 
     // Нажата кнопка "Отмена"
@@ -149,7 +157,7 @@ public class Train extends JDialog {
         command.append(departureStationComboBoxItem.getId() + ", "); // Станция отправления
         DBComboboxModel.ComboBoxItem arrivalStationComboBoxItem = (DBComboboxModel.ComboBoxItem) arrivalStationComboBox.getModel().getSelectedItem();
         command.append(arrivalStationComboBoxItem.getId() + ", "); // Станция прибытия
-        command.append("\"" + departureTimeTextField.getText() + "\" "); // Время отправления TODO: String -> Date
+        command.append("\"" + getDepartureTime() + "\" "); // Время отправления TODO: String -> Date
 
         // Выполним SQL и получим результат (ID новой записи в БД)
         String id = DBHelper.getInstance().insertFunctionWithResult(command.toString());
@@ -169,49 +177,9 @@ public class Train extends JDialog {
         command.append(departureStationComboBoxItem.getId() + ", "); // Станция отправления
         DBComboboxModel.ComboBoxItem arrivalStationComboBoxItem = (DBComboboxModel.ComboBoxItem) arrivalStationComboBox.getModel().getSelectedItem();
         command.append(arrivalStationComboBoxItem.getId() + ", "); // Станция прибытия
-        command.append("\"" + departureTimeTextField.getText() + "\" "); // Время отправления TODO: String -> Date
+        command.append("\"" + getDepartureTime() + "\" "); // Время отправления TODO: String -> Date
 
         DBHelper.getInstance().executeFunction(command.toString());
-    }
-
-    // Нажата кнопка "Добавить вагон"
-    private void onAddWagon() {
-        // Если мы в режиме создания нового поезда, то перед добавлением вагонов добавим в БД сам поезд
-        // TODO: предупредить пользователя, что перед добавлением вагона поезд будет сохранен (создан) в БД
-        if (trainId == null) {
-            addTrain();
-        }
-
-        // Диалог создания вагона
-        Wagon dialog = new Wagon(trainId);
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
-
-        // Обновим список (возможно добавился новый вагон)
-        refreshWagonListTable();
-    }
-
-    // Нажата кнопка "Удалить вагон"
-    private void onDeleteWagon() {
-        // Активная строка в таблице
-        int row = wagonListTable.getSelectedRow();
-        if (row < 0) {
-            return;
-        }
-
-        // в 0 столбце id вагона
-        String id = wagonListTable.getModel().getValueAt(row, 0).toString();
-        if (id == null) {
-            return;
-        }
-
-        // TODO: Проверить вдруг уже проданы билеты в этот вагон, тогда нельзя удалять
-
-        // Удалить вагон из БД
-        DBHelper.getInstance().executeFunction("Exec deleteWagon " + id);
-
-        refreshWagonListTable();
     }
 
 }

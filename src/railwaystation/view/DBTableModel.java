@@ -8,7 +8,7 @@ import java.util.Arrays;
 public class DBTableModel extends DefaultTableModel {
 
     public DBTableModel(String storedProcedureName, Object[] columnNames) {
-        String result = DBHelper.getInstance().selectFunction("Exec " + storedProcedureName, columnNames.length);
+        String result = DBHelper.getInstance().selectFunction("EXECUTE " + storedProcedureName, columnNames.length);
         if (result != null && !result.isEmpty()) {
             Object[][]  data = Arrays.stream(result.split("\n")).map(i -> i.split(";")).toArray(Object[][]::new);
             super.setDataVector(data, columnNames);
