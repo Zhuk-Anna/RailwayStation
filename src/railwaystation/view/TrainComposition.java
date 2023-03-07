@@ -12,7 +12,8 @@ public class TrainComposition extends JDialog {
 
     private JTextField trainNameTextField;
     private JTextField trainTypeTextField;
-    private JTextField routeTextField;
+    private JTextField destinationStationTextField;
+    private JTextField basePriceTextField;
 
     private JTable wagonListTable;
     private JButton addWagonButton;
@@ -20,7 +21,7 @@ public class TrainComposition extends JDialog {
 
     private JButton buttonClose;
 
-    private String trainId;
+    private final String trainId;
 
     public TrainComposition(String trainId) {
         this.trainId = trainId;
@@ -52,24 +53,20 @@ public class TrainComposition extends JDialog {
 
     // Получим из БД информацию о поезде и обновим компоненты на форме
     private void refreshTrainInfo() {
-        String[] columnNames = {"ID", "Поезд", "Тип поезда", "Время отправления", "Станция отправления", "Станция прибытия"};
+        String[] columnNames = {"ID", "Поезд", "Тип поезда", "Время отправления", "Расписание", "Станция назначения", "Базовая стоимость билета"};
         TableModel model = new DBTableModel("getTrainInfo " + trainId, columnNames);
-        if (model == null) {
-            return;
-        }
 
         trainNameTextField.setText(model.getValueAt(0, 1).toString());
 
         String trainTypeId = model.getValueAt(0, 2).toString();
-        String departureStationId = model.getValueAt(0, 4).toString();
-        String arrivalStationId = model.getValueAt(0, 5).toString();
+        String destinationStationId = model.getValueAt(0, 5).toString();
 
-        ComboBoxModel trainTypeModel = new DBComboboxModel("getAllTrainTypes");
-        ComboBoxModel stationModel = new DBComboboxModel("getAllStations");
+        ComboBoxModel<DBComboboxModel.ComboBoxItem> trainTypeModel = new DBComboboxModel("getAllTrainTypes");
+        ComboBoxModel<DBComboboxModel.ComboBoxItem> stationModel = new DBComboboxModel("getAllStations");
 
         String trainType = "";
         for (int i = 0; i < trainTypeModel.getSize(); i++) {
-            DBComboboxModel.ComboBoxItem item = (DBComboboxModel.ComboBoxItem) trainTypeModel.getElementAt(i);
+            DBComboboxModel.ComboBoxItem item = trainTypeModel.getElementAt(i);
             if (item.getId().equals(trainTypeId)) {
                 trainType = item.toString();
                 break;
@@ -77,21 +74,16 @@ public class TrainComposition extends JDialog {
         }
         trainTypeTextField.setText(trainType);
 
-        String departureStation = "";
-        String arrivalStation = "";
+        String destinationStation = "";
         for (int i = 0; i < stationModel.getSize(); i++) {
-            DBComboboxModel.ComboBoxItem item = (DBComboboxModel.ComboBoxItem) stationModel.getElementAt(i);
-            if (item.getId().equals(departureStationId)) {
-                departureStation = item.toString();
-            }
-            if (item.getId().equals(arrivalStationId)) {
-                arrivalStation = item.toString();
-            }
-            if (!departureStation.isEmpty() && !arrivalStation.isEmpty()) {
+            DBComboboxModel.ComboBoxItem item = stationModel.getElementAt(i);
+            if (item.getId().equals(destinationStationId)) {
+                destinationStation = item.toString();
                 break;
             }
         }
-        routeTextField.setText(departureStation + " - " + arrivalStation);
+        destinationStationTextField.setText(destinationStation);
+        basePriceTextField.setText(model.getValueAt(0, 6).toString());
 
         refreshWagonListTable();
     }

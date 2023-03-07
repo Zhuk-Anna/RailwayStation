@@ -6,6 +6,8 @@ import javax.swing.*;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class MainPage extends JPanel {
     private JTabbedPane rolesTabbedPane;
@@ -25,27 +27,48 @@ public class MainPage extends JPanel {
 
     public MainPage() {
         add(rootPanel);
+        initControls();
+        refreshTrainListTables();
+    }
+
+    private void initControls() {
         addTrainButton.addActionListener(this::onAddTrainButtonClick);
         editTrainButton.addActionListener(this::onEditTrainButtonClick);
         deleteTrainButton.addActionListener(this::onDeleteTrainButtonClick);
         composeTrainButton.addActionListener(this::onComposeTrainButtonClick);
-        refreshTrainListTables();
+
+        trainInfoListTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() == 2) {
+                    onEditTrainButtonClick(null);
+                }
+            }
+        });
+
+        trainCompositionListTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() == 2) {
+                    onComposeTrainButtonClick(null);
+                }
+            }
+        });
     }
 
     // Обновляем данные в таблицах
     private void refreshTrainListTables() {
-        String[] columnNames = {"ID", "Поезд", "Тип поезда", "Время отправления", "Станция отправления", "Станция прибытия", "Кол-во вагонов"};
+        String[] columnNames = {"ID", "Поезд", "Тип поезда", "Время отправления", "Расписание", "Станция назначения", "Базовая стоимость билета", "Кол-во вагонов"};
 
         TableModel trainInfoModel = new DBTableModel("getAllTrainsInfo", columnNames);
         trainInfoListTable.setModel(trainInfoModel);
         TableColumnModel columnModel1 = trainInfoListTable.getColumnModel();
-        columnModel1.removeColumn(columnModel1.getColumn(6));
+        columnModel1.removeColumn(columnModel1.getColumn(7));
         columnModel1.removeColumn(columnModel1.getColumn(0));
 
         TableModel trainCompositionModel = new DBTableModel("getAllTrainsInfo", columnNames);
         trainCompositionListTable.setModel(trainCompositionModel);
         TableColumnModel columnModel2 = trainCompositionListTable.getColumnModel();
-        columnModel2.removeColumn(columnModel2.getColumn(3));
         columnModel2.removeColumn(columnModel2.getColumn(0));
     }
 
@@ -114,7 +137,7 @@ public class MainPage extends JPanel {
         }
 
         TrainComposition dialog = new TrainComposition(id);
-        dialog.setSize(700, 500);
+        dialog.setSize(700, 400);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
 

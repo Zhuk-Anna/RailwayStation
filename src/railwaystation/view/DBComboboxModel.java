@@ -11,8 +11,7 @@ import java.util.stream.Collectors;
 public class DBComboboxModel extends DefaultComboBoxModel<DBComboboxModel.ComboBoxItem> {
 
     public DBComboboxModel(String storedProcedureName) {
-        String[] columnNames = {"ID", "Название"};
-        String result = DBHelper.getInstance().selectFunction("EXECUTE " + storedProcedureName, columnNames.length);
+        String result = DBHelper.getInstance().selectFunction("EXECUTE " + storedProcedureName, 2);
         List<ComboBoxItem> data = new ArrayList<>();
         if (result != null && !result.isEmpty()) {
             data = Arrays.stream(result.split("\n")).map(i -> {
@@ -23,9 +22,9 @@ public class DBComboboxModel extends DefaultComboBoxModel<DBComboboxModel.ComboB
         super.addAll(data);
     }
 
-    public class ComboBoxItem {
-        private String id;
-        private String name;
+    public static class ComboBoxItem {
+        private final String id;
+        private final String name;
 
         public ComboBoxItem(String id, String name) {
             this.id = id;

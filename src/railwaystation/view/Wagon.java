@@ -10,11 +10,9 @@ public class Wagon extends JDialog {
     private JButton buttonOK;
     private JButton buttonCancel;
     private JTextField wagonNameTextField;
-    private JComboBox wagonTypeComboBox;
-    private JSpinner seatsCountSpinner;
-    private JTextField ticketPriceTextField;
+    private JComboBox<DBComboboxModel.ComboBoxItem> wagonTypeComboBox;
 
-    private String trainId;
+    private final String trainId;
 
     public Wagon(String trainId) {
         this.trainId = trainId;
@@ -25,17 +23,8 @@ public class Wagon extends JDialog {
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
 
-        buttonOK.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onOK();
-            }
-        });
-
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        });
+        buttonOK.addActionListener(e -> onOK());
+        buttonCancel.addActionListener(e -> onCancel());
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -46,18 +35,16 @@ public class Wagon extends JDialog {
         });
 
         // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPane.registerKeyboardAction(e -> onCancel(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         refreshWagonTypeList();
     }
 
     // Получим из БД список типов вагонов в ComboBox
     private void refreshWagonTypeList() {
-        ComboBoxModel wagonTypeModel = new DBComboboxModel("getAllWagonTypes");
+        ComboBoxModel<DBComboboxModel.ComboBoxItem> wagonTypeModel = new DBComboboxModel("getAllWagonTypes");
         wagonTypeComboBox.setModel(wagonTypeModel);
         wagonTypeComboBox.setSelectedIndex(0);
     }
@@ -77,16 +64,13 @@ public class Wagon extends JDialog {
     private void addWagon() {
         // Сформируем SQL строку
         StringBuilder command = new StringBuilder("EXECUTE addWagon ");
-        command.append(trainId + ", "); // ID поезда
-        command.append("\"" + wagonNameTextField.getText() + "\", "); // Номер вагона
+        command.append(trainId).append(", "); // ID поезда
+        command.append("\"").append(wagonNameTextField.getText()).append("\", "); // Номер вагона
         DBComboboxModel.ComboBoxItem wagonTypeComboBoxItem = (DBComboboxModel.ComboBoxItem) wagonTypeComboBox.getModel().getSelectedItem();
-        command.append(wagonTypeComboBoxItem.getId() + ", "); // Тип вагона
-        command.append("\"" + ticketPriceTextField.getText() + "\", "); // Стоимость билета
-        command.append(seatsCountSpinner.getModel().getValue().toString()); // Колво мест в вагоне
+        command.append(wagonTypeComboBoxItem.getId()); // Тип вагона
 
         // Выполним SQL
         DBHelper.getInstance().executeFunction(command.toString());
     }
-
 
 }
