@@ -128,8 +128,6 @@ public class TrainComposition extends JDialog {
             return;
         }
 
-        // TODO: Проверить вдруг уже проданы билеты в этот вагон, тогда нельзя удалять
-
         // Удалить вагон из БД
         DBHelper.getInstance().executeFunction("Exec deleteWagon " + id);
 

@@ -73,7 +73,7 @@ public class MainPage extends JPanel {
         TableColumnModel columnModel2 = trainCompositionListTable.getColumnModel();
         columnModel2.removeColumn(columnModel2.getColumn(0));
 
-        String[] ticketColumnNames = {"ID", "ФИО", "Дата рождения", "Тип документа", "Номер документа", "Поезд", "Станция назначения", "Отправление", "Вагон", "Место", "Стоимость билета"};
+        String[] ticketColumnNames = {"ID", "ФИО", "Дата рождения", "Тип документа", "Номер документа", "Поезд", "Станция назначения", "Отправление", "Вагон", "Стоимость билета"};
         TableModel ticketModel = new DBTableModel("getAllTicketsInfo", ticketColumnNames);
         ticketListTable.setModel(ticketModel);
         TableColumnModel columnModel3 = ticketListTable.getColumnModel();
@@ -123,8 +123,6 @@ public class MainPage extends JPanel {
         if (id == null) {
             return;
         }
-
-        // TODO: Проверить вдруг уже проданы билеты на этот поезд, тогда нельзя удалять
 
         // Удалить поезд из БД
         DBHelper.getInstance().executeFunction("Exec deleteTrain " + id);

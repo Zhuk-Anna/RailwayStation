@@ -1,6 +1,10 @@
 package railwaystation.view;
 
+import railwaystation.DBHelper;
+
 import javax.swing.*;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 import java.awt.event.*;
 
 public class TicketSales extends JDialog {
@@ -9,24 +13,16 @@ public class TicketSales extends JDialog {
     private JButton buttonCancel;
     private JComboBox<DBComboBoxModel.ComboBoxItem> passengerComboBox;
     private JComboBox<DBComboBoxModel.ComboBoxItem> trainComboBox;
-    private JTable table1;
+    private JTable wagonListTable;
 
     public TicketSales() {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
 
-        buttonOK.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onOK();
-            }
-        });
+        buttonOK.addActionListener(e -> onOK());
 
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        });
+        buttonCancel.addActionListener(e -> onCancel());
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -37,33 +33,66 @@ public class TicketSales extends JDialog {
         });
 
         // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPane.registerKeyboardAction(e -> onCancel(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         refreshPassengerList();
         refreshTrainList();
+        refreshWagonList();
     }
 
     private void refreshPassengerList() {
         ComboBoxModel<DBComboBoxModel.ComboBoxItem> trainTypeModel = new DBComboBoxModel("getAllPassengersName");
         passengerComboBox.setModel(trainTypeModel);
+        passengerComboBox.setSelectedIndex(0);
     }
 
     private void refreshTrainList() {
         ComboBoxModel<DBComboBoxModel.ComboBoxItem> trainTypeModel = new DBComboBoxModel("getAllTrainsName");
         trainComboBox.setModel(trainTypeModel);
+        trainComboBox.addActionListener(l -> refreshWagonList());
     }
 
-    private void onOK() {
-        // add your code here
-        dispose();
+    private void refreshWagonList() {
+        DBComboBoxModel.ComboBoxItem trainComboBoxItem = (DBComboBoxModel.ComboBoxItem) trainComboBox.getModel().getSelectedItem();
+        if (trainComboBoxItem == null) {
+            return;
+        }
+        String trainId = trainComboBoxItem.getId();
+
+        String[] columnNames = {"ID", "Номер вагона", "Тип вагона", "Кол-во мест", "Цена"};
+        TableModel ticketModel = new DBTableModel("getAllWagonsInfo " + trainId, columnNames);
+        wagonListTable.setModel(ticketModel);
+        TableColumnModel columnModel = wagonListTable.getColumnModel();
+        columnModel.removeColumn(columnModel.getColumn(0));
     }
 
     private void onCancel() {
-        // add your code here if necessary
         dispose();
     }
+
+    private void onOK() {
+        DBComboBoxModel.ComboBoxItem passengerComboBoxItem = (DBComboBoxModel.ComboBoxItem) passengerComboBox.getModel().getSelectedItem();
+        if (passengerComboBoxItem == null) {
+            return;
+        }
+
+        int row = wagonListTable.getSelectedRow();
+        if (row < 0) {
+            return;
+        }
+
+        String wagonId = wagonListTable.getModel().getValueAt(row, 0).toString();
+        String passengerId = passengerComboBoxItem.getId();
+
+        // Сформируем SQL строку
+        String command = "EXECUTE addTicket " + wagonId + ", " + passengerId;
+
+        // Выполним SQL
+        DBHelper.getInstance().executeFunction(command);
+
+        dispose();
+    }
+
 }
