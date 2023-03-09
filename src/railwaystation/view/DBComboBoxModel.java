@@ -8,9 +8,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DBComboboxModel extends DefaultComboBoxModel<DBComboboxModel.ComboBoxItem> {
+public class DBComboBoxModel extends DefaultComboBoxModel<DBComboBoxModel.ComboBoxItem> {
 
-    public DBComboboxModel(String storedProcedureName) {
+    public DBComboBoxModel(String storedProcedureName) {
         String result = DBHelper.getInstance().selectFunction("EXECUTE " + storedProcedureName, 2);
         List<ComboBoxItem> data = new ArrayList<>();
         if (result != null && !result.isEmpty()) {

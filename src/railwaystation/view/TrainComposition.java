@@ -53,20 +53,20 @@ public class TrainComposition extends JDialog {
 
     // Получим из БД информацию о поезде и обновим компоненты на форме
     private void refreshTrainInfo() {
-        String[] columnNames = {"ID", "Поезд", "Тип поезда", "Время отправления", "Расписание", "Станция назначения", "Базовая стоимость билета"};
+        String[] columnNames = {"ID", "Поезд", "Тип поезда", "Отправление", "Станция назначения", "Базовая стоимость билета"};
         TableModel model = new DBTableModel("getTrainInfo " + trainId, columnNames);
 
         trainNameTextField.setText(model.getValueAt(0, 1).toString());
 
         String trainTypeId = model.getValueAt(0, 2).toString();
-        String destinationStationId = model.getValueAt(0, 5).toString();
+        String destinationStationId = model.getValueAt(0, 4).toString();
 
-        ComboBoxModel<DBComboboxModel.ComboBoxItem> trainTypeModel = new DBComboboxModel("getAllTrainTypes");
-        ComboBoxModel<DBComboboxModel.ComboBoxItem> stationModel = new DBComboboxModel("getAllStations");
+        ComboBoxModel<DBComboBoxModel.ComboBoxItem> trainTypeModel = new DBComboBoxModel("getAllTrainTypes");
+        ComboBoxModel<DBComboBoxModel.ComboBoxItem> stationModel = new DBComboBoxModel("getAllStations");
 
         String trainType = "";
         for (int i = 0; i < trainTypeModel.getSize(); i++) {
-            DBComboboxModel.ComboBoxItem item = trainTypeModel.getElementAt(i);
+            DBComboBoxModel.ComboBoxItem item = trainTypeModel.getElementAt(i);
             if (item.getId().equals(trainTypeId)) {
                 trainType = item.toString();
                 break;
@@ -76,14 +76,14 @@ public class TrainComposition extends JDialog {
 
         String destinationStation = "";
         for (int i = 0; i < stationModel.getSize(); i++) {
-            DBComboboxModel.ComboBoxItem item = stationModel.getElementAt(i);
+            DBComboBoxModel.ComboBoxItem item = stationModel.getElementAt(i);
             if (item.getId().equals(destinationStationId)) {
                 destinationStation = item.toString();
                 break;
             }
         }
         destinationStationTextField.setText(destinationStation);
-        basePriceTextField.setText(model.getValueAt(0, 6).toString());
+        basePriceTextField.setText(String.format("%.2f", Float.valueOf(model.getValueAt(0, 5).toString())));
 
         refreshWagonListTable();
     }

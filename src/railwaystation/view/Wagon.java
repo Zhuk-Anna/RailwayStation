@@ -10,7 +10,7 @@ public class Wagon extends JDialog {
     private JButton buttonOK;
     private JButton buttonCancel;
     private JTextField wagonNameTextField;
-    private JComboBox<DBComboboxModel.ComboBoxItem> wagonTypeComboBox;
+    private JComboBox<DBComboBoxModel.ComboBoxItem> wagonTypeComboBox;
 
     private final String trainId;
 
@@ -44,7 +44,7 @@ public class Wagon extends JDialog {
 
     // Получим из БД список типов вагонов в ComboBox
     private void refreshWagonTypeList() {
-        ComboBoxModel<DBComboboxModel.ComboBoxItem> wagonTypeModel = new DBComboboxModel("getAllWagonTypes");
+        ComboBoxModel<DBComboBoxModel.ComboBoxItem> wagonTypeModel = new DBComboBoxModel("getAllWagonTypes");
         wagonTypeComboBox.setModel(wagonTypeModel);
         wagonTypeComboBox.setSelectedIndex(0);
     }
@@ -66,7 +66,7 @@ public class Wagon extends JDialog {
         StringBuilder command = new StringBuilder("EXECUTE addWagon ");
         command.append(trainId).append(", "); // ID поезда
         command.append("\"").append(wagonNameTextField.getText()).append("\", "); // Номер вагона
-        DBComboboxModel.ComboBoxItem wagonTypeComboBoxItem = (DBComboboxModel.ComboBoxItem) wagonTypeComboBox.getModel().getSelectedItem();
+        DBComboBoxModel.ComboBoxItem wagonTypeComboBoxItem = (DBComboBoxModel.ComboBoxItem) wagonTypeComboBox.getModel().getSelectedItem();
         command.append(wagonTypeComboBoxItem.getId()); // Тип вагона
 
         // Выполним SQL

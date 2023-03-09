@@ -36,6 +36,8 @@ public class MainPage extends JPanel {
         editTrainButton.addActionListener(this::onEditTrainButtonClick);
         deleteTrainButton.addActionListener(this::onDeleteTrainButtonClick);
         composeTrainButton.addActionListener(this::onComposeTrainButtonClick);
+        sellTicketButton.addActionListener(this::onSellTicketButtonClick);
+        returnTicketButton.addActionListener(this::onReturnTicketButtonClick);
 
         trainInfoListTable.addMouseListener(new MouseAdapter() {
             @Override
@@ -58,18 +60,24 @@ public class MainPage extends JPanel {
 
     // Обновляем данные в таблицах
     private void refreshTrainListTables() {
-        String[] columnNames = {"ID", "Поезд", "Тип поезда", "Время отправления", "Расписание", "Станция назначения", "Базовая стоимость билета", "Кол-во вагонов"};
+        String[] trainColumnNames = {"ID", "Поезд", "Тип поезда", "Отправление", "Станция назначения", "Базовая стоимость билета", "Кол-во вагонов"};
 
-        TableModel trainInfoModel = new DBTableModel("getAllTrainsInfo", columnNames);
+        TableModel trainInfoModel = new DBTableModel("getAllTrainsInfo", trainColumnNames);
         trainInfoListTable.setModel(trainInfoModel);
         TableColumnModel columnModel1 = trainInfoListTable.getColumnModel();
-        columnModel1.removeColumn(columnModel1.getColumn(7));
+        columnModel1.removeColumn(columnModel1.getColumn(6));
         columnModel1.removeColumn(columnModel1.getColumn(0));
 
-        TableModel trainCompositionModel = new DBTableModel("getAllTrainsInfo", columnNames);
+        TableModel trainCompositionModel = new DBTableModel("getAllTrainsInfo", trainColumnNames);
         trainCompositionListTable.setModel(trainCompositionModel);
         TableColumnModel columnModel2 = trainCompositionListTable.getColumnModel();
         columnModel2.removeColumn(columnModel2.getColumn(0));
+
+        String[] ticketColumnNames = {"ID", "ФИО", "Дата рождения", "Тип документа", "Номер документа", "Поезд", "Станция назначения", "Отправление", "Вагон", "Место", "Стоимость билета"};
+        TableModel ticketModel = new DBTableModel("getAllTicketsInfo", ticketColumnNames);
+        ticketListTable.setModel(ticketModel);
+        TableColumnModel columnModel3 = ticketListTable.getColumnModel();
+        columnModel3.removeColumn(columnModel3.getColumn(0));
     }
 
     // Нажата кнопка "Добавить поезд"
@@ -140,6 +148,35 @@ public class MainPage extends JPanel {
         dialog.setSize(700, 400);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
+
+        refreshTrainListTables();
+    }
+
+    // Нажата кнопка "Оформить билет"
+    private void onSellTicketButtonClick(ActionEvent actionEvent) {
+        TicketSales dialog = new TicketSales();
+        dialog.setSize(700, 300);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+
+        refreshTrainListTables();
+    }
+
+    // Нажата кнопка "Вернуть билет"
+    private void onReturnTicketButtonClick(ActionEvent actionEvent) {
+        // Активная строка в таблице
+        int row = ticketListTable.getSelectedRow();
+        if (row < 0) {
+            return;
+        }
+
+        // в 0 столбце id билета
+        String id = ticketListTable.getModel().getValueAt(row, 0).toString();
+        if (id == null) {
+            return;
+        }
+        // Удалить билет из БД
+        DBHelper.getInstance().executeFunction("Exec deleteTicket " + id);
 
         refreshTrainListTables();
     }

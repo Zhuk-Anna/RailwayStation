@@ -14,10 +14,9 @@ public class TrainInfo extends JDialog {
     private JPanel contentPane;
 
     private JTextField trainNameTextField;
-    private JComboBox<DBComboboxModel.ComboBoxItem> trainTypeComboBox;
+    private JComboBox<DBComboBoxModel.ComboBoxItem> trainTypeComboBox;
     private JSpinner departureTimeSpinner;
-    private JTextField timeTableTextField;
-    private JComboBox<DBComboboxModel.ComboBoxItem> destinationStationComboBox;
+    private JComboBox<DBComboBoxModel.ComboBoxItem> destinationStationComboBox;
     private JSpinner basePriceSpinner;
 
     private JButton buttonOK;
@@ -65,7 +64,7 @@ public class TrainInfo extends JDialog {
 
     private void initSpinners() {
         departureTimeSpinner.setModel(new SpinnerDateModel());
-        JSpinner.DateEditor dateTimeEditor = new JSpinner.DateEditor(departureTimeSpinner, "HH:mm");
+        JSpinner.DateEditor dateTimeEditor = new JSpinner.DateEditor(departureTimeSpinner, "dd.MM.yyyy HH:mm");
         departureTimeSpinner.setEditor(dateTimeEditor);
 
         basePriceSpinner.setModel(new SpinnerNumberModel(0.0f, null, null, 0.1f));
@@ -79,7 +78,7 @@ public class TrainInfo extends JDialog {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.SECOND, 0);
-        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
+        SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm");
         return formatter.format(calendar.getTime());
     }
 
@@ -88,46 +87,39 @@ public class TrainInfo extends JDialog {
         refreshTrainTypeList();
         refreshStationList();
 
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm");
+        SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm");
         Date date = new Date();
 
         // Если создание нового поезда - установим значения по умолчанию
         if (trainId == null) {
             trainTypeComboBox.setSelectedIndex(0);
             destinationStationComboBox.setSelectedIndex(0);
-            timeTableTextField.setText("Ежедневно");
-            basePriceSpinner.setValue(1.0);
-            try {
-                date = format.parse("00:00");
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+            basePriceSpinner.setValue(1.0f);
             departureTimeSpinner.setValue(date);
             return;
         }
 
-        String[] columnNames = {"ID", "Поезд", "Тип поезда", "Время отправления", "Расписание", "Станция назначения", "Базовая стоимость билета"};
+        String[] columnNames = {"ID", "Поезд", "Тип поезда", "Отправление", "Станция назначения", "Базовая стоимость билета"};
         TableModel model = new DBTableModel("getTrainInfo " + trainId, columnNames);
 
         trainNameTextField.setText(model.getValueAt(0, 1).toString());
         setComboBoxIndex(trainTypeComboBox, model.getValueAt(0, 2).toString());
 
         try {
-            date = format.parse(model.getValueAt(0, 3).toString());
+            date = formatter.parse(model.getValueAt(0, 3).toString());
         } catch (ParseException e) {
             e.printStackTrace();
         }
         departureTimeSpinner.setValue(date);
 
-        timeTableTextField.setText(model.getValueAt(0, 4).toString());
-        setComboBoxIndex(destinationStationComboBox, model.getValueAt(0, 5).toString());
-        basePriceSpinner.setValue(Float.valueOf(model.getValueAt(0, 6).toString()));
+        setComboBoxIndex(destinationStationComboBox, model.getValueAt(0, 4).toString());
+        basePriceSpinner.setValue(Float.valueOf(model.getValueAt(0, 5).toString()));
     }
 
     // Установим у ComboBox текущий элемент
-    private void setComboBoxIndex(JComboBox<DBComboboxModel.ComboBoxItem> comboBox, String id) {
+    private void setComboBoxIndex(JComboBox<DBComboBoxModel.ComboBoxItem> comboBox, String id) {
         for (int i = 0; i < comboBox.getItemCount(); i++) {
-            DBComboboxModel.ComboBoxItem item = comboBox.getItemAt(i);
+            DBComboBoxModel.ComboBoxItem item = comboBox.getItemAt(i);
             if (item.getId().equals(id)) {
                 comboBox.setSelectedIndex(i);
                 break;
@@ -137,13 +129,13 @@ public class TrainInfo extends JDialog {
 
     // Получим из БД список типов поездов в ComboBox
     private void refreshTrainTypeList() {
-        ComboBoxModel<DBComboboxModel.ComboBoxItem> trainTypeModel = new DBComboboxModel("getAllTrainTypes");
+        ComboBoxModel<DBComboBoxModel.ComboBoxItem> trainTypeModel = new DBComboBoxModel("getAllTrainTypes");
         trainTypeComboBox.setModel(trainTypeModel);
     }
 
     // Получим из БД список станций в ComboBox
     private void refreshStationList() {
-        ComboBoxModel<DBComboboxModel.ComboBoxItem> destinationStationModel = new DBComboboxModel("getAllStations");
+        ComboBoxModel<DBComboBoxModel.ComboBoxItem> destinationStationModel = new DBComboBoxModel("getAllStations");
         destinationStationComboBox.setModel(destinationStationModel);
     }
 
@@ -177,22 +169,20 @@ public class TrainInfo extends JDialog {
 
     // Изменение существующего поезда в БД
     private void editTrain() {
-        // TODO: stored procedure!!!
         StringBuilder command = new StringBuilder("EXECUTE editTrain ");
         command.append(trainId).append(", "); // ID поезда
         createSQLCommand(command);
-
+        System.out.println(command);
         DBHelper.getInstance().executeFunction(command.toString());
     }
 
     private void createSQLCommand(StringBuilder command) {
         command.append("\"").append(trainNameTextField.getText()).append("\", "); // Номер поезда
-        DBComboboxModel.ComboBoxItem trainTypeComboBoxItem = (DBComboboxModel.ComboBoxItem) trainTypeComboBox.getModel().getSelectedItem();
+        DBComboBoxModel.ComboBoxItem trainTypeComboBoxItem = (DBComboBoxModel.ComboBoxItem) trainTypeComboBox.getModel().getSelectedItem();
         command.append(trainTypeComboBoxItem.getId()).append(", "); // Тип поезда
-        DBComboboxModel.ComboBoxItem departureStationComboBoxItem = (DBComboboxModel.ComboBoxItem) destinationStationComboBox.getModel().getSelectedItem();
+        DBComboBoxModel.ComboBoxItem departureStationComboBoxItem = (DBComboBoxModel.ComboBoxItem) destinationStationComboBox.getModel().getSelectedItem();
         command.append(departureStationComboBoxItem.getId()).append(", "); // Станция назначения
-        command.append("\"").append(getDepartureTime()).append("\", "); // Время отправления
-        command.append("\"").append(timeTableTextField.getText()).append("\", "); // Расписание
+        command.append("\"").append(getDepartureTime()).append("\", "); // Отправление
         command.append((float)basePriceSpinner.getModel().getValue()); // Базовая стоимость билета
     }
 
