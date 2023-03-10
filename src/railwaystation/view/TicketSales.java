@@ -15,7 +15,12 @@ public class TicketSales extends JDialog {
     private JComboBox<DBComboBoxModel.ComboBoxItem> trainComboBox;
     private JTable wagonListTable;
 
-    public TicketSales() {
+    private final String passengerId;
+
+    public TicketSales(String passengerId) {
+
+        this.passengerId = passengerId;
+
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
@@ -46,12 +51,29 @@ public class TicketSales extends JDialog {
         ComboBoxModel<DBComboBoxModel.ComboBoxItem> trainTypeModel = new DBComboBoxModel("getAllPassengersName");
         passengerComboBox.setModel(trainTypeModel);
         passengerComboBox.setSelectedIndex(0);
+        if (passengerId != null) {
+            setComboBoxIndex(passengerComboBox, passengerId);
+        } else {
+            passengerComboBox.setSelectedIndex(0);
+        }
     }
 
     private void refreshTrainList() {
         ComboBoxModel<DBComboBoxModel.ComboBoxItem> trainTypeModel = new DBComboBoxModel("getAllTrainsName");
         trainComboBox.setModel(trainTypeModel);
         trainComboBox.addActionListener(l -> refreshWagonList());
+        trainComboBox.setSelectedIndex(0);
+    }
+
+    // Установим у ComboBox текущий элемент
+    private void setComboBoxIndex(JComboBox<DBComboBoxModel.ComboBoxItem> comboBox, String id) {
+        for (int i = 0; i < comboBox.getItemCount(); i++) {
+            DBComboBoxModel.ComboBoxItem item = comboBox.getItemAt(i);
+            if (item.getId().equals(id)) {
+                comboBox.setSelectedIndex(i);
+                break;
+            }
+        }
     }
 
     private void refreshWagonList() {

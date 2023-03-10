@@ -22,8 +22,10 @@ public class MainPage extends JPanel {
     private JButton composeTrainButton; // Сформировать поезд
 
     private JTable ticketListTable;
+    private JTable passengerListTable;
     private JButton sellTicketButton;
     private JButton returnTicketButton;
+    private JButton addPassengerButton;
 
     public MainPage() {
         add(rootPanel);
@@ -36,6 +38,7 @@ public class MainPage extends JPanel {
         editTrainButton.addActionListener(this::onEditTrainButtonClick);
         deleteTrainButton.addActionListener(this::onDeleteTrainButtonClick);
         composeTrainButton.addActionListener(this::onComposeTrainButtonClick);
+        addPassengerButton.addActionListener(this::onAddPassengerButtonClick);
         sellTicketButton.addActionListener(this::onSellTicketButtonClick);
         returnTicketButton.addActionListener(this::onReturnTicketButtonClick);
 
@@ -53,6 +56,15 @@ public class MainPage extends JPanel {
             public void mouseClicked(MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() == 2) {
                     onComposeTrainButtonClick(null);
+                }
+            }
+        });
+
+        passengerListTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() == 2) {
+                    onSellTicketButtonClick(null);
                 }
             }
         });
@@ -78,6 +90,12 @@ public class MainPage extends JPanel {
         ticketListTable.setModel(ticketModel);
         TableColumnModel columnModel3 = ticketListTable.getColumnModel();
         columnModel3.removeColumn(columnModel3.getColumn(0));
+
+        String[] passengerColumnNames = {"ID", "ФИО", "Дата рождения", "Тип документа", "Номер документа", "Льгота"};
+        TableModel passengerModel = new DBTableModel("getAllPassengersInfo", passengerColumnNames);
+        passengerListTable.setModel(passengerModel);
+        TableColumnModel columnModel4 = passengerListTable.getColumnModel();
+        columnModel4.removeColumn(columnModel4.getColumn(0));
     }
 
     // Нажата кнопка "Добавить поезд"
@@ -150,9 +168,26 @@ public class MainPage extends JPanel {
         refreshTrainListTables();
     }
 
+    // Нажата кнопка "Добавить пассажира"
+    private void onAddPassengerButtonClick(ActionEvent actionEvent) {
+        Passenger dialog = new Passenger();
+        dialog.setSize(700, 300);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+
+        refreshTrainListTables();
+    }
+
     // Нажата кнопка "Оформить билет"
     private void onSellTicketButtonClick(ActionEvent actionEvent) {
-        TicketSales dialog = new TicketSales();
+        String passengerId = null;
+
+        int row = passengerListTable.getSelectedRow();
+        if (row >= 0) {
+            passengerId = passengerListTable.getModel().getValueAt(row, 0).toString();
+        }
+
+        TicketSales dialog = new TicketSales(passengerId);
         dialog.setSize(700, 300);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
