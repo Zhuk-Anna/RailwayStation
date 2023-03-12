@@ -161,7 +161,7 @@ public class TrainInfo extends JDialog {
         createSQLCommand(command);
 
         // Выполним SQL и получим результат (ID новой записи в БД)
-        String id = DBHelper.getInstance().insertFunctionWithResult(command.toString());
+        String id = DBHelper.getInstance().executeFunctionWithResult(command.toString());
         if (id != null && !id.isEmpty()) {
             trainId = id; // Теперь у нас есть поезд в БД
         }

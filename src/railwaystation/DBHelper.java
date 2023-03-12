@@ -69,7 +69,7 @@ public class DBHelper {
         }
     }
 
-    public String insertFunctionWithResult(String command) {
+    public String executeFunctionWithResult(String command) {
         try {
             ResultSet resultSet = this.statement.executeQuery(command);
             resultSet.next();

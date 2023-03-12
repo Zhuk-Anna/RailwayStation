@@ -21,6 +21,8 @@ public class TicketSales extends JDialog {
 
         this.passengerId = passengerId;
 
+        setTitle("Оформить билет");
+
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
@@ -83,7 +85,7 @@ public class TicketSales extends JDialog {
         }
         String trainId = trainComboBoxItem.getId();
 
-        String[] columnNames = {"ID", "Номер вагона", "Тип вагона", "Кол-во мест", "Цена"};
+        String[] columnNames = {"ID", "Номер вагона", "Тип вагона", "Кол-во мест", "Цена", "Продано мест"};
         TableModel ticketModel = new DBTableModel("getAllWagonsInfo " + trainId, columnNames);
         wagonListTable.setModel(ticketModel);
         TableColumnModel columnModel = wagonListTable.getColumnModel();
@@ -108,11 +110,18 @@ public class TicketSales extends JDialog {
         String wagonId = wagonListTable.getModel().getValueAt(row, 0).toString();
         String passengerId = passengerComboBoxItem.getId();
 
-        // Сформируем SQL строку
-        String command = "EXECUTE addTicket " + wagonId + ", " + passengerId;
+        // Проверим есть ли еще в вагоне свободные места
+        String res = DBHelper.getInstance().executeFunctionWithResult("EXECUTE getEmptyPlacesCount " + wagonId);
 
-        // Выполним SQL
-        DBHelper.getInstance().executeFunction(command);
+        if ("0".equals(res)) { // Места закончились
+            JOptionPane.showMessageDialog(null,
+                    "В выбранном вагоне больше нет свободных мест",
+                    "Ошибка",
+                    JOptionPane.ERROR_MESSAGE);
+        } else {
+            // Продадим билет
+            DBHelper.getInstance().executeFunction("EXECUTE addTicket " + wagonId + ", " + passengerId);
+        }
 
         dispose();
     }
