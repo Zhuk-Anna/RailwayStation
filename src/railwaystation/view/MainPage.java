@@ -27,7 +27,25 @@ public class MainPage extends JPanel {
     private JButton returnTicketButton;
     private JButton addPassengerButton;
 
-    public MainPage() {
+    public MainPage(int role) {
+
+        if (role == 0) { // Admin
+            // Оставим полный доступ
+        } else if (role == 1) { // Диспетчер
+            rolesTabbedPane.removeTabAt(2);
+            rolesTabbedPane.removeTabAt(1);
+        } else if (role == 2) { // Составитель поездов
+            rolesTabbedPane.removeTabAt(2);
+            rolesTabbedPane.removeTabAt(0);
+        } else if (role == 3) { // Кассир
+            rolesTabbedPane.removeTabAt(1);
+            rolesTabbedPane.removeTabAt(0);
+        } else {
+            rolesTabbedPane.removeTabAt(2);
+            rolesTabbedPane.removeTabAt(1);
+            rolesTabbedPane.removeTabAt(0);
+        }
+
         add(rootPanel);
         initControls();
         refreshTrainListTables();
